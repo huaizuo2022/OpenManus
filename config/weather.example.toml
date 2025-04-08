@@ -1,0 +1,6 @@
+# 天气工具配置示例
+# 复制此文件为config.toml或在现有config.toml中添加[weather]部分
+
+[weather]
+# OpenWeatherMap API密钥，获取方式：https://openweathermap.org/api
+api_key = "在此处填入你的OpenWeatherMap API密钥"
