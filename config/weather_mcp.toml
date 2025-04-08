@@ -1,0 +1,12 @@
+# 天气MCP服务器配置
+# 此文件可以合并到主配置文件config/config.toml中
+
+# MCP配置
+[mcp]
+# 天气服务器模块引用
+server_reference = "run_weather_server"
+
+# 天气API配置
+[weather]
+# OpenWeatherMap API密钥
+api_key = "在此处填入你的OpenWeatherMap API密钥"
