@@ -1,0 +1,7 @@
+# 有赞订单查询MCP服务器配置
+# 此文件可以合并到主配置文件config/config.toml中
+
+# MCP配置
+[mcp]
+# 有赞订单服务器模块引用
+server_reference = "run_youzan_order_server"
