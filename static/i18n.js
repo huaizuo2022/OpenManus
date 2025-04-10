@@ -167,7 +167,7 @@ const i18n = {
 };
 
 function getCurrentLanguage() {
-    return localStorage.getItem('language') || 'en';
+    return localStorage.getItem('language') || 'zh';
 }
 
 function setLanguage(lang) {

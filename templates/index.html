@@ -1,34 +1,34 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OpenManus Local Version</title>
+    <title>OpenManus 本地版</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <div class="container">
         <div class="side-panel">
             <div class="history-panel">
-                <h2>History Tasks</h2>
+                <h2>历史任务</h2>
                 <div id="task-list" class="task-list"></div>
             </div>
             <div class="set-config-panel">
-                <select id="language-select" aria-label="Select language">
+                <select id="language-select" aria-label="选择语言">
                     <option value="en">English</option>
-                    <option value="zh">中文</option>
+                    <option value="zh" selected>中文</option>
                     <option value="ja">日本語</option>
                     <option value="ko">한국어</option>
                     <option value="de">Deutsch</option>
                 </select>
-                <input type="button" id="config-button" value="Configuration Setting" title="Configuration Settings">
+                <input type="button" id="config-button" value="系统配置" title="系统配置">
             </div>
         </div>
         <div class="main-panel">
             <div id="task-container" class="task-container">
                 <div class="welcome-message">
-                    <h1>Welcome to OpenManus Local Version</h1>
-                    <p>Please enter a task prompt to start a new task</p>
+                    <h1>欢迎使用 OpenManus 本地版</h1>
+                    <p>请输入任务提示以开始新任务</p>
                 </div>
                 <div id="log-container" class="step-container"></div>
             </div>
@@ -37,10 +37,10 @@
                 <input
                     type="text"
                     id="prompt-input"
-                    placeholder="Enter task prompt..."
+                    placeholder="输入任务提示..."
                     onkeypress="if(event.keyCode === 13) createTask()"
                 >
-                <button onclick="createTask()">Create Task</button>
+                <button onclick="createTask()">创建任务</button>
             </div>
         </div>
     </div>
@@ -48,51 +48,51 @@
     <div id="config-modal" class="config-modal">
         <div class="config-modal-content">
             <div class="config-modal-header">
-                <h2>System Configuration</h2>
-                <p>Please fill in the necessary configuration information to continue using the system</p>
+                <h2>系统配置</h2>
+                <p>请填写必要的配置信息以继续使用系统</p>
                 <span class="close-modal">&times;</span>
             </div>
 
             <div class="config-modal-body">
                 <div class="note-box">
-                    <p>⚠️ Please ensure that the following configuration information is correct.</p>
-                    <p>If you do not have an API key, please obtain one from the corresponding AI service provider.</p>
+                    <p>⚠️ 请确保以下配置信息正确无误。</p>
+                    <p>如果您没有API密钥，请从相应的AI服务提供商获取。</p>
                 </div>
 
                 <div class="config-section">
-                    <h3>LLM Configuration</h3>
+                    <h3>LLM 配置</h3>
                     <div class="form-group">
-                        <label for="llm-model">Model Name <span class="required-mark">*</span></label>
-                        <input type="text" id="llm-model" name="llm.model" placeholder="For example: claude-3-5-sonnet">
+                        <label for="llm-model">模型名称 <span class="required-mark">必填</span></label>
+                        <input type="text" id="llm-model" name="llm.model" placeholder="例如: claude-3-5-sonnet">
                     </div>
                     <div class="form-group">
-                        <label for="llm-base-url">API Base URL <span class="required-mark">*</span></label>
-                        <input type="text" id="llm-base-url" name="llm.base_url" placeholder="For example: https://api.openai.com/v1">
+                        <label for="llm-base-url">API 基础 URL <span class="required-mark">必填</span></label>
+                        <input type="text" id="llm-base-url" name="llm.base_url" placeholder="例如: https://api.openai.com/v1">
                     </div>
                     <div class="form-group">
-                        <label for="llm-api-key">API Key <span class="required-mark">*</span></label>
-                        <input type="password" id="llm-api-key" name="llm.api_key" placeholder="Your API key, for example: sk-...">
-                        <span class="field-help">Must be your own valid API key, not the placeholder in the example</span>
+                        <label for="llm-api-key">API 密钥 <span class="required-mark">必填</span></label>
+                        <input type="password" id="llm-api-key" name="llm.api_key" placeholder="您的 API 密钥，例如: sk-...">
+                        <span class="field-help">必须是您自己的有效 API 密钥，而不是示例中的占位符</span>
                     </div>
                     <div class="form-group">
-                        <label for="llm-max-tokens">Max Tokens</label>
-                        <input type="number" id="llm-max-tokens" name="llm.max_tokens" placeholder="For example: 4096">
+                        <label for="llm-max-tokens">最大 Token 数</label>
+                        <input type="number" id="llm-max-tokens" name="llm.max_tokens" placeholder="例如: 4096">
                     </div>
                     <div class="form-group">
-                        <label for="llm-temperature">Temperature</label>
-                        <input type="number" id="llm-temperature" name="llm.temperature" step="0.1" placeholder="For example: 0.0">
+                        <label for="llm-temperature">温度</label>
+                        <input type="number" id="llm-temperature" name="llm.temperature" step="0.1" placeholder="例如: 0.0">
                     </div>
                 </div>
 
                 <div class="config-section">
-                    <h3>Server Configuration</h3>
+                    <h3>服务器配置</h3>
                     <div class="form-group">
-                        <label for="server-host">Host <span class="required-mark">*</span></label>
-                        <input type="text" id="server-host" name="server.host" placeholder="For example: localhost">
+                        <label for="server-host">主机 <span class="required-mark">必填</span></label>
+                        <input type="text" id="server-host" name="server.host" placeholder="例如: localhost">
                     </div>
                     <div class="form-group">
-                        <label for="server-port">Port <span class="required-mark">*</span></label>
-                        <input type="number" id="server-port" name="server.port" placeholder="For example: 5172">
+                        <label for="server-port">端口 <span class="required-mark">必填</span></label>
+                        <input type="number" id="server-port" name="server.port" placeholder="例如: 5172">
                     </div>
                 </div>
             </div>
@@ -100,8 +100,8 @@
             <div class="config-modal-footer">
                 <p id="config-error" class="config-error"></p>
                 <div class="config-actions">
-                    <button id="cancel-config-btn" class="secondary-btn">Cancel</button>
-                    <button id="save-config-btn" class="primary-btn">Save Configuration</button>
+                    <button id="cancel-config-btn" class="secondary-btn">取消</button>
+                    <button id="save-config-btn" class="primary-btn">保存配置</button>
                 </div>
             </div>
         </div>
