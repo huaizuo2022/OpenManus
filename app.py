@@ -1,4 +1,7 @@
 import asyncio
+
+# 设置环境变量，控制日志输出
+import logging
 import os
 import threading
 import tomllib
@@ -20,6 +23,19 @@ from fastapi.responses import (
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
+
+# 设置uvicorn日志级别为WARNING，减少HTTP请求日志
+logging.getLogger("uvicorn").setLevel(logging.WARNING)
+logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
+logging.getLogger("uvicorn.error").setLevel(logging.WARNING)
+
+# 设置app日志级别
+os.environ["LOG_LEVEL"] = os.environ.get("LOG_LEVEL", "WARNING")  # 默认为WARNING级别
+os.environ["HIDE_BROWSER_LOGS"] = os.environ.get("HIDE_BROWSER_LOGS", "1")
+os.environ["HIDE_HTTP_LOGS"] = os.environ.get("HIDE_HTTP_LOGS", "1")
+
+# 设置环境变量，强制使用有赞订单MCP
+os.environ["USE_YOUZAN_ORDER_TOOL"] = "1"
 
 
 app = FastAPI()
@@ -121,10 +137,34 @@ async def run_task(task_id: str, prompt: str):
     try:
         task_manager.tasks[task_id].status = "running"
 
+        # 创建Manus代理
         agent = Manus(
             name="Manus",
             description="A versatile agent that can solve various tasks using multiple tools",
         )
+
+        # 直接添加有赞订单查询工具
+        try:
+            from app.tool.custom.youzan_order import YouzanOrderTool
+
+            agent.available_tools.add_tool(YouzanOrderTool())
+            print("成功添加有赞订单查询工具")
+        except Exception as e:
+            print(f"添加有赞订单查询工具失败: {str(e)}")
+
+        # 使用MCP连接器连接到有赞订单服务器
+        try:
+            from app.mcp_connector import connector
+
+            mcp_client = await connector.connect_to_youzan_order_server()
+            if mcp_client:
+                for tool in mcp_client.tools:
+                    agent.available_tools.add_tool(tool)
+                print(
+                    f"成功连接到有赞订单MCP服务器，工具列表：{[tool.name for tool in mcp_client.tools]}"
+                )
+        except Exception as e:
+            print(f"连接有赞订单MCP服务器失败: {str(e)}")
 
         async def on_think(thought):
             await task_manager.update_task_step(task_id, 0, thought, "think")
@@ -173,9 +213,21 @@ async def run_task(task_id: str, prompt: str):
         sse_handler = SSELogHandler(task_id)
         logger.add(sse_handler)
 
-        result = await agent.run(prompt)
-        await task_manager.update_task_step(task_id, 1, result, "result")
-        await task_manager.complete_task(task_id)
+        try:
+            result = await agent.run(prompt)
+            await task_manager.update_task_step(task_id, 1, result, "result")
+            await task_manager.complete_task(task_id)
+        finally:
+            # 清理资源
+            try:
+                from app.mcp_connector import connector
+
+                await connector.disconnect_all()
+            except Exception as e:
+                print(f"断开MCP连接失败: {str(e)}")
+
+            if agent:
+                await agent.cleanup()
     except Exception as e:
         await task_manager.fail_task(task_id, str(e))
 
@@ -345,9 +397,38 @@ def load_config():
 
 
 if __name__ == "__main__":
+    import argparse
+
     import uvicorn
 
+    # 添加命令行参数解析
+    parser = argparse.ArgumentParser(description="启动OpenManus WebUI")
+    parser.add_argument(
+        "--silent", action="store_true", help="静默模式启动，不打开浏览器"
+    )
+    parser.add_argument(
+        "--log-level", default="WARNING", help="日志级别: DEBUG, INFO, WARNING, ERROR"
+    )
+    parser.add_argument("--hide-http", action="store_true", help="隐藏HTTP请求日志")
+    parser.add_argument(
+        "--hide-browser", action="store_true", help="隐藏浏览器工具日志"
+    )
+    args = parser.parse_args()
+
+    # 设置日志级别环境变量
+    os.environ["LOG_LEVEL"] = args.log_level
+    if args.hide_http:
+        os.environ["HIDE_HTTP_LOGS"] = "1"
+    if args.hide_browser:
+        os.environ["HIDE_BROWSER_LOGS"] = "1"
+
     config = load_config()
-    open_with_config = partial(open_local_browser, config)
-    threading.Timer(3, open_with_config).start()
+
+    # 只有在非静默模式下才打开浏览器
+    if not args.silent:
+        open_with_config = partial(open_local_browser, config)
+        threading.Timer(3, open_with_config).start()
+
+    # 启动服务器
+    print(f"正在启动OpenManus WebUI: http://{config['host']}:{config['port']}")
     uvicorn.run(app, host=config["host"], port=config["port"])
