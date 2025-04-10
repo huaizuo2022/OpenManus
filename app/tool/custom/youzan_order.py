@@ -305,10 +305,16 @@ class YouzanOrderTool(BaseTool):
 
             if payment:
                 logger.debug(f"支付信息字段: {list(payment.keys())}")
-                order_info.append(f"支付方式: {payment.get('payWay', 'N/A')}")
-                order_info.append(
-                    f"支付状态: {self._get_payment_status(payment.get('payStatus', -1))}"
-                )
+                pay_way = payment.get("payWay", "N/A")
+                if pay_way != "N/A":  # 只有当值不是N/A时才添加
+                    order_info.append(f"支付方式: {pay_way}")
+
+                pay_status = self._get_payment_status(payment.get("payStatus", -1))
+                if (
+                    pay_status != "银行端处理中" and pay_status != f"未知状态(-1)"
+                ):  # 排除银行端处理中状态
+                    order_info.append(f"支付状态: {pay_status}")
+
                 order_info.append(f"支付金额: ¥{payment.get('realPay', 0) / 100:.2f}")
 
             # 添加商品信息 - 考虑不同的嵌套结构
@@ -425,7 +431,7 @@ class YouzanOrderTool(BaseTool):
                 )
                 order_info.append(f"  买家ID: {buyer_id}")
 
-                # 买家名称
+                # 买家名称 - 只在非N/A时添加
                 buyer_name = (
                     buyer.get("buyerName")
                     or buyer.get("nickname")
@@ -433,7 +439,8 @@ class YouzanOrderTool(BaseTool):
                     or buyer.get("userName")
                     or "N/A"
                 )
-                order_info.append(f"  买家名: {buyer_name}")
+                if buyer_name != "N/A":
+                    order_info.append(f"  买家名: {buyer_name}")
 
                 # 电话号码(带隐私保护)
                 if "mobile" in buyer and buyer["mobile"]:
