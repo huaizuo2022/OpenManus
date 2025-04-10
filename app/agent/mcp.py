@@ -44,40 +44,52 @@ class MCPAgent(ToolCallAgent):
         command: Optional[str] = None,
         args: Optional[List[str]] = None,
     ) -> None:
-        """Initialize the MCP connection.
+        """初始化MCP连接
 
-        Args:
-            connection_type: Type of connection to use ("stdio" or "sse")
-            server_url: URL of the MCP server (for SSE connection)
-            command: Command to run (for stdio connection)
-            args: Arguments for the command (for stdio connection)
+        功能：
+        - 根据连接类型建立与MCP服务器的连接
+        - 初始化可用工具列表
+        - 向系统内存添加初始消息
+
+        参数：
+            connection_type: 连接类型("stdio"或"sse")
+            server_url: SSE连接时使用的服务器URL
+            command: stdio连接时运行的命令
+            args: stdio连接时命令的参数
+
+        异常：
+            ValueError: 当参数不符合要求时抛出
         """
+        # 更新连接类型(如果提供了参数)
         if connection_type:
             self.connection_type = connection_type
 
-        # Connect to the MCP server based on connection type
+        # 根据连接类型建立连接
         if self.connection_type == "sse":
+            # SSE连接必须提供服务器URL
             if not server_url:
                 raise ValueError("Server URL is required for SSE connection")
             await self.mcp_clients.connect_sse(server_url=server_url)
         elif self.connection_type == "stdio":
+            # stdio连接必须提供命令
             if not command:
                 raise ValueError("Command is required for stdio connection")
             await self.mcp_clients.connect_stdio(command=command, args=args or [])
         else:
+            # 不支持的连接类型
             raise ValueError(f"Unsupported connection type: {self.connection_type}")
 
-        # Set available_tools to our MCP instance
+        # 设置可用工具集合
         self.available_tools = self.mcp_clients
 
-        # Store initial tool schemas
+        # 刷新工具列表
         await self._refresh_tools()
 
-        # Add system message about available tools
+        # 准备工具信息消息
         tool_names = list(self.mcp_clients.tool_map.keys())
         tools_info = ", ".join(tool_names)
 
-        # Add system prompt and available tools information
+        # 向内存添加系统消息(包含系统提示和可用工具列表)
         self.memory.add_message(
             Message.system_message(
                 f"{self.system_prompt}\n\nAvailable MCP tools: {tools_info}"

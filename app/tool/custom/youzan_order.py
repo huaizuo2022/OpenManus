@@ -259,15 +259,15 @@ class YouzanOrderTool(BaseTool):
             # 获取状态 - 可能在不同位置
             status_code = -1
             if "status" in main_order_info:
-                status_code = main_order_info.get("status")
+                status_code = main_order_info.get("state")
             elif "status" in order:
                 status_code = order.get("status")
 
-            order_info.append(f"状态: {self._get_order_status(status_code)}")
+            order_info.append(f"状态: {main_order_info.get('stateDesc')}")
 
             # 获取创建时间
             created_at = (
-                main_order_info.get("createdAt") or order.get("createdAt") or "N/A"
+                main_order_info.get("createTime") or order.get("createTime") or "N/A"
             )
             order_info.append(f"创建时间: {created_at}")
 
@@ -289,7 +289,7 @@ class YouzanOrderTool(BaseTool):
                 order_info.append(
                     f"支付状态: {self._get_payment_status(payment.get('payStatus', -1))}"
                 )
-                order_info.append(f"支付金额: ¥{payment.get('payAmount', 0) / 100:.2f}")
+                order_info.append(f"支付金额: ¥{payment.get('realPay', 0) / 100:.2f}")
 
             # 添加商品信息 - 考虑不同的嵌套结构
             items = []
